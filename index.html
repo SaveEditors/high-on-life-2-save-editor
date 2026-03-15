@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>High On Life 2 - Save Editor</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap");
+    :root{
+      --bg:#0b0f14;
+      --bg-soft:#111821;
+      --panel:#0e131a;
+      --panel-alt:#151d26;
+      --accent:#3ad1a6;
+      --accent-2:#54b5ff;
+      --accent-3:#f6b34b;
+      --text:#eef3f8;
+      --text-dim:#9aa6b3;
+      --line:rgba(255,255,255,.08);
+      --good:#3bd18b;
+      --warn:#f6b34b;
+      --bad:#e46b6b;
+      --shadow:0 26px 50px rgba(0,0,0,.42);
+      --radius:16px;
+      --radius-sm:12px;
+      --font:"Space Grotesk","Segoe UI",sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(58,209,166,.18), transparent 42%),
+        radial-gradient(circle at 80% 0%, rgba(84,181,255,.15), transparent 35%),
+        linear-gradient(160deg, #0b0f14 0%, #0a131a 50%, #0b0f14 100%);
+    }
+    a{color:inherit;text-decoration:none}
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 28px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(15,21,28,.95), rgba(15,21,28,.6));
+      position:sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(10px);
+    }
+    header .title{
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    header h1{
+      margin:0;
+      font-size:1.3rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    header .subtitle{color:var(--text-dim);font-size:.9rem}
+    nav{display:flex;gap:12px;flex-wrap:wrap}
+    nav a{
+      padding:8px 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--text-dim);
+      transition:.2s ease;
+    }
+    nav a:hover{border-color:var(--accent);color:var(--text)}
+
+    main{width:min(1220px,92vw);margin:26px auto 70px;display:grid;gap:20px}
+    .panel{
+      background:linear-gradient(180deg,rgba(255,255,255,.02),rgba(0,0,0,.2)),var(--panel);
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+    }
+    .hero{
+      display:grid;
+      gap:16px;
+    }
+    .hero .row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text-dim);
+      font-size:.85rem;
+    }
+    .drop-zone{
+      border:1px dashed color-mix(in srgb,var(--accent) 55%, transparent);
+      border-radius:var(--radius);
+      padding:24px;
+      text-align:center;
+      color:var(--text-dim);
+      background:linear-gradient(180deg, rgba(58,209,166,.06), transparent 55%);
+      transition:.2s ease;
+    }
+    .drop-zone.dragover{
+      border-color:var(--accent);
+      color:var(--text);
+      box-shadow:0 0 0 4px rgba(58,209,166,.15);
+    }
+    .btn{
+      border:1px solid transparent;
+      border-radius:999px;
+      padding:10px 16px;
+      font:inherit;
+      cursor:pointer;
+      background:color-mix(in srgb,var(--accent) 35%, var(--bg-soft));
+      color:var(--text);
+      transition:.2s ease;
+    }
+    .btn:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(58,209,166,.2)}
+    .btn.secondary{background:rgba(255,255,255,.04);border-color:var(--line);color:var(--text-dim)}
+    .btn.warn{background:color-mix(in srgb,var(--accent-3) 40%, var(--bg-soft))}
+    .btn.good{background:color-mix(in srgb,var(--good) 40%, var(--bg-soft))}
+    .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .grid{
+      display:grid;
+      gap:12px;
+      grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    }
+    label{display:block;color:var(--text-dim);font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+    input[type="text"],input[type="number"],select,textarea{
+      width:100%;
+      background:var(--bg-soft);
+      border:1px solid var(--line);
+      border-radius:var(--radius-sm);
+      padding:10px 12px;
+      color:var(--text);
+      font:inherit;
+      outline:none;
+    }
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px rgba(58,209,166,.18)}
+    .help{color:var(--text-dim);font-size:.85rem;line-height:1.4;margin-top:6px;overflow-wrap:anywhere}
+    .help code{word-break:break-all}
+    .muted{color:var(--text-dim)}
+    .status{
+      display:grid;
+      gap:8px;
+      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    }
+    .status-card{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      background:rgba(255,255,255,.02);
+      min-width:0;
+    }
+    .status-card h3{margin:0 0 6px;font-size:.95rem}
+    .status-card p{margin:0;color:var(--text-dim);font-size:.9rem;line-height:1.4;overflow-wrap:anywhere;word-break:break-all}
+
+    details{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      padding:14px 16px;
+      background:rgba(255,255,255,.02);
+    }
+    summary{cursor:pointer;font-weight:600;color:var(--text)}
+    summary::marker{color:var(--accent)}
+    .table{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
+    }
+    .list{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    .row{
+      display:grid;
+      gap:10px;
+      grid-template-columns: minmax(120px, 1fr) 140px 140px;
+      align-items:center;
+      padding:8px 10px;
+      border:1px solid var(--line);
+      border-radius:10px;
+      background:rgba(255,255,255,.01);
+    }
+    .row > *{min-width:0}
+    .row strong{font-weight:600}
+    .row .key{font-size:.92rem;overflow-wrap:anywhere;word-break:break-word}
+    .row .val{color:var(--text-dim);font-variant-numeric:tabular-nums}
+    .row .changed{color:var(--accent)}
+    .small{font-size:.85rem}
+    .flex{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .spacer{flex:1}
+    footer{margin:18px 0 0;color:var(--text-dim);font-size:.85rem}
+    .file-input{position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0}
+    .stat-card{
+      border:1px solid var(--line);
+      border-radius:12px;
+      padding:12px;
+      background:rgba(255,255,255,.02);
+      min-width:0;
+    }
+    .stat-card strong{display:block;margin-bottom:6px;font-size:.9rem}
+    .stat-card .metric{font-size:1.1rem;font-weight:600}
+    .stat-card .muted{margin-top:4px}
+    @media (max-width:820px){
+      nav{justify-content:flex-start}
+      .row{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">
+      <h1>High On Life 2 - Save Editor</h1>
+      <div class="subtitle">Simple by default. Advanced if you need it.</div>
+    </div>
+    <nav>
+      <a href="https://saveeditors.github.io/" target="_blank" rel="noreferrer">All Editors Home</a>
+      <a href="https://github.com/SaveEditors/high-on-life-2-save-editor" target="_blank" rel="noreferrer">Repo</a>
+      <a href="https://github.com/SaveEditors/high-on-life-2-save-editor/issues" target="_blank" rel="noreferrer">Issues</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="panel hero">
+      <div class="row">
+        <span class="pill">Format: GVAS (Unreal)</span>
+        <span class="pill">Save class: /Script/Washington.ORSaveGame</span>
+        <span class="pill">Safe mode: backups on save</span>
+      </div>
+      <div class="drop-zone" id="dropZone">
+        <strong>Drop a High On Life 2 save here</strong>
+        <div>Supports Microsoft Store `wgs` payload files and standard save exports.</div>
+      </div>
+      <div class="row">
+        <button class="btn" id="pickFileBtn">Load Save File</button>
+        <button class="btn secondary" id="pickFolderBtn">Load Save Folder</button>
+          <input type="file" id="fileInput" multiple class="file-input" />
+          <input type="file" id="folderInput" webkitdirectory class="file-input" />
+        <div class="spacer"></div>
+        <button class="btn secondary" id="resetBtn" disabled>Reset Changes</button>
+      </div>
+      <div class="help">
+        <div><strong>Windows (Steam)</strong>: <code>%LOCALAPPDATA%\\HighOnLife2\\Saved\\SaveGames\\</code> (pick the <code>.sav</code> or save export).</div>
+        <div><strong>Windows (Microsoft Store / Game Pass)</strong>: <code>%LOCALAPPDATA%\\Packages\\&lt;HighOnLife2 package family&gt;\\SystemAppData\\wgs\\</code> (pick the folder; the editor will auto-detect the largest <code>GVAS</code> file).</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="status" id="statusGrid">
+        <div class="status-card">
+          <h3>Loaded File</h3>
+          <p id="fileName">None</p>
+        </div>
+        <div class="status-card">
+          <h3>Decode Status</h3>
+          <p id="decodeStatus">Waiting for file…</p>
+        </div>
+        <div class="status-card">
+          <h3>Backup Mode</h3>
+          <p id="backupStatus">Web: download backups | Desktop: auto backup + overwrite</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Simple Editor</h2>
+      <div class="grid">
+          <div>
+            <label for="pesosInput" title="Edits Inventory.Descriptor.Item.Pesos from DictionaryRaw">Money (raw units)</label>
+            <input type="number" id="pesosInput" min="0" step="1" disabled />
+            <div class="help">Key: <code>Inventory.Descriptor.Item.Pesos</code></div>
+            <div class="help">The game uses Pesos internally. This is the raw value saved by the game.</div>
+            <div class="help">Current: <span id="pesosCurrent">-</span> | New: <span id="pesosNew">-</span></div>
+          </div>
+        <div>
+          <label for="checkpointSelect" title="Changes CheckpointName (story progression) using existing checkpoint keys">Checkpoint</label>
+          <select id="checkpointSelect" disabled></select>
+          <div class="help">Current: <span id="checkpointCurrent">-</span> | New: <span id="checkpointNew">-</span></div>
+        </div>
+      </div>
+      <div class="help">Checkpoint changes can affect story flow. Always keep a backup and relaunch the game after saving.</div>
+    </section>
+
+      <section class="panel">
+        <h2>Highlights</h2>
+        <div class="grid">
+          <div>
+            <label>Active Checkpoints</label>
+          <div class="list" id="activeCheckpointList"></div>
+          <div class="help">Only shows keys marked as <code>EState::Active</code>.</div>
+        </div>
+        <div>
+          <label>Non-zero Flags</label>
+          <div class="list" id="nonZeroList"></div>
+          <div class="help">Most saves have many zeros. These are the values that are actually set.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" id="analysisPanel">
+        <h2>Save Analysis</h2>
+        <div class="grid">
+          <div class="stat-card">
+            <strong>DictionaryRaw Entries</strong>
+            <div class="metric" id="analysisRawCount">-</div>
+            <div class="muted small">All numeric flags in this save.</div>
+          </div>
+          <div class="stat-card">
+            <strong>Non-zero Flags</strong>
+            <div class="metric" id="analysisNonZero">-</div>
+            <div class="muted small">Values that are already set.</div>
+          </div>
+          <div class="stat-card">
+            <strong>Inventory / Items</strong>
+            <div class="metric" id="analysisInventory">-</div>
+            <div class="muted small">Keys matching inventory + item patterns.</div>
+          </div>
+          <div class="stat-card">
+            <strong>Player / Stats</strong>
+            <div class="metric" id="analysisStats">-</div>
+            <div class="muted small">Keys that look like player stats.</div>
+          </div>
+          <div class="stat-card">
+            <strong>Weapons / Upgrades</strong>
+            <div class="metric" id="analysisWeapons">-</div>
+            <div class="muted small">Keys that look like weapon/upgrades.</div>
+          </div>
+          <div class="stat-card">
+            <strong>Mission Flags</strong>
+            <div class="metric" id="analysisMissions">-</div>
+            <div class="muted small">Mission/objective related keys.</div>
+          </div>
+        </div>
+        <div class="help" id="analysisNote"></div>
+      </section>
+
+    <section class="panel">
+      <h2>Save Actions</h2>
+      <div class="row">
+        <button class="btn good" id="saveBtn" disabled>Save (Backup + Overwrite in Desktop)</button>
+        <button class="btn secondary" id="downloadBackupBtn" disabled>Download Backup (Web)</button>
+        <button class="btn secondary" id="downloadEditedBtn" disabled>Download Edited Save (Web)</button>
+        <div class="spacer"></div>
+        <span class="muted small" id="dirtyFlag">No changes yet.</span>
+      </div>
+    </section>
+
+    <details class="panel" id="advancedPanel">
+      <summary>Advanced (optional)</summary>
+        <div class="help">Advanced tools show raw keys, but avoid GUIDs. Use caution and always backup.</div>
+        <div class="flex" style="margin-top:10px">
+          <label class="small"><input type="checkbox" id="showZerosToggle" /> Show zero values (mission/raw)</label>
+          <label class="small"><input type="checkbox" id="showAllStatesToggle" /> Show inactive checkpoints</label>
+          <label class="small"><input type="checkbox" id="showInternalToggle" /> Show internal IDs (risky)</label>
+          <span class="small muted" id="internalWarning" style="display:none">Editing internal IDs can corrupt saves. Keep a backup.</span>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <h3>Inventory + Items (DictionaryRaw)</h3>
+          <div class="help">Filtered keys matching inventory/item/ammo/currency tokens (mission keys excluded). Edit values directly.</div>
+          <div class="table" id="inventoryTable"></div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <h3>Progress / Missions (DictionaryRaw)</h3>
+          <div class="flex" style="margin:8px 0">
+            <label class="small">Group
+              <select id="missionGroupSelect"></select>
+            </label>
+            <input type="text" id="missionSearch" placeholder="Filter mission keys" />
+          </div>
+          <div class="help">Filtered keys containing <code>Mission.</code>, <code>Checkpoint.</code>, or <code>Objective</code>. Use the group picker to narrow the list.</div>
+          <div class="table" id="missionTable"></div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <h3>Stats / Player (DictionaryRaw)</h3>
+          <div class="help">Filtered keys matching player/stat/XP/level/health tokens (mission keys excluded).</div>
+          <div class="table" id="statsTable"></div>
+        </div>
+
+        <div class="panel" style="margin-top:14px">
+          <h3>Weapons + Upgrades (DictionaryRaw)</h3>
+          <div class="help">Filtered keys matching weapon/gun/upgrade/mod/perk tokens (mission keys excluded).</div>
+          <div class="table" id="weaponsTable"></div>
+        </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h3>Checkpoint States (Dictionary)</h3>
+        <div class="help">Toggle states for checkpoint keys. This does not edit GUIDs.</div>
+        <div class="table" id="dictionaryTable"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="flex">
+          <h3>Full DictionaryRaw Search</h3>
+          <div class="spacer"></div>
+          <input type="text" id="rawSearch" placeholder="Search key..." />
+        </div>
+        <div class="table" id="rawTable"></div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h3>Add / Update DictionaryRaw Key</h3>
+        <div class="grid">
+          <div>
+            <label for="rawKeyInput">Key</label>
+            <input type="text" id="rawKeyInput" placeholder="Inventory.Descriptor.Item.Example" />
+          </div>
+          <div>
+            <label for="rawValueInput">Value</label>
+            <input type="number" id="rawValueInput" value="0" />
+          </div>
+        </div>
+        <div class="help">Adds a new entry or updates an existing one. Use exact key names.</div>
+        <button class="btn warn" id="rawAddBtn">Apply Key</button>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <h3>SpawnedObjectDatas (Read-only Summary)</h3>
+        <p class="help">Size: <span id="spawnSize">-</span> bytes | Entries: <span id="spawnCount">-</span></p>
+        <p class="help">ObjectData blobs are preserved byte-for-byte. This keeps inventory byte arrays safe while we map them.</p>
+      </div>
+    </details>
+
+    <footer>
+      Close the game and cloud sync before editing. Re-open after saving.
+      <div class="muted small" style="margin-top:6px">
+        <a href="https://saveeditors.github.io/" target="_blank" rel="noreferrer">All Editors Home</a> |
+        <a href="https://github.com/SaveEditors/high-on-life-2-save-editor" target="_blank" rel="noreferrer">Repo</a> |
+        <a href="https://github.com/SaveEditors/high-on-life-2-save-editor/issues" target="_blank" rel="noreferrer">Issues</a> |
+        <a href="https://github.com/SaveEditors" target="_blank" rel="noreferrer">SaveEditors Org</a>
+      </div>
+    </footer>
+  </main>
+
+  <script>
+      const dom = {
+        dropZone: document.getElementById("dropZone"),
+        pickFileBtn: document.getElementById("pickFileBtn"),
+        pickFolderBtn: document.getElementById("pickFolderBtn"),
+        fileInput: document.getElementById("fileInput"),
+      folderInput: document.getElementById("folderInput"),
+      resetBtn: document.getElementById("resetBtn"),
+      fileName: document.getElementById("fileName"),
+      decodeStatus: document.getElementById("decodeStatus"),
+      pesosInput: document.getElementById("pesosInput"),
+      pesosCurrent: document.getElementById("pesosCurrent"),
+      pesosNew: document.getElementById("pesosNew"),
+      checkpointSelect: document.getElementById("checkpointSelect"),
+      checkpointCurrent: document.getElementById("checkpointCurrent"),
+        checkpointNew: document.getElementById("checkpointNew"),
+        activeCheckpointList: document.getElementById("activeCheckpointList"),
+        nonZeroList: document.getElementById("nonZeroList"),
+        analysisRawCount: document.getElementById("analysisRawCount"),
+        analysisNonZero: document.getElementById("analysisNonZero"),
+        analysisInventory: document.getElementById("analysisInventory"),
+        analysisStats: document.getElementById("analysisStats"),
+        analysisWeapons: document.getElementById("analysisWeapons"),
+        analysisMissions: document.getElementById("analysisMissions"),
+        analysisNote: document.getElementById("analysisNote"),
+        saveBtn: document.getElementById("saveBtn"),
+        downloadBackupBtn: document.getElementById("downloadBackupBtn"),
+        downloadEditedBtn: document.getElementById("downloadEditedBtn"),
+        dirtyFlag: document.getElementById("dirtyFlag"),
+        inventoryTable: document.getElementById("inventoryTable"),
+        missionTable: document.getElementById("missionTable"),
+        missionGroupSelect: document.getElementById("missionGroupSelect"),
+        missionSearch: document.getElementById("missionSearch"),
+        statsTable: document.getElementById("statsTable"),
+        weaponsTable: document.getElementById("weaponsTable"),
+        dictionaryTable: document.getElementById("dictionaryTable"),
+        rawTable: document.getElementById("rawTable"),
+        rawSearch: document.getElementById("rawSearch"),
+        showZerosToggle: document.getElementById("showZerosToggle"),
+        showAllStatesToggle: document.getElementById("showAllStatesToggle"),
+        showInternalToggle: document.getElementById("showInternalToggle"),
+        internalWarning: document.getElementById("internalWarning"),
+        rawKeyInput: document.getElementById("rawKeyInput"),
+        rawValueInput: document.getElementById("rawValueInput"),
+      rawAddBtn: document.getElementById("rawAddBtn"),
+      spawnSize: document.getElementById("spawnSize"),
+      spawnCount: document.getElementById("spawnCount")
+    };
+
+      const state = {
+        source: null,
+        parsed: null,
+        dirty: false,
+        showZeros: false,
+        showAllStates: false,
+        showInternal: false
+      };
+
+    class ByteReader {
+      constructor(bytes, start = 0, length = null) {
+        this.bytes = bytes;
+        this.start = start;
+        this.length = length == null ? bytes.length - start : length;
+        this.view = new DataView(bytes.buffer, bytes.byteOffset + start, this.length);
+        this.pos = 0;
+      }
+      tell() { return this.pos; }
+      abs() { return this.start + this.pos; }
+      seek(p) { this.pos = p; }
+      ensure(n) {
+        if (this.pos + n > this.length) throw new Error("Unexpected EOF");
+      }
+      readUint8() {
+        this.ensure(1);
+        const v = this.view.getUint8(this.pos);
+        this.pos += 1;
+        return v;
+      }
+      readUint16() {
+        this.ensure(2);
+        const v = this.view.getUint16(this.pos, true);
+        this.pos += 2;
+        return v;
+      }
+      readInt32() {
+        this.ensure(4);
+        const v = this.view.getInt32(this.pos, true);
+        this.pos += 4;
+        return v;
+      }
+      readUint32() {
+        this.ensure(4);
+        const v = this.view.getUint32(this.pos, true);
+        this.pos += 4;
+        return v;
+      }
+      readBytes(n) {
+        this.ensure(n);
+        const v = this.bytes.subarray(this.start + this.pos, this.start + this.pos + n);
+        this.pos += n;
+        return v;
+      }
+      readFString() {
+        const len = this.readInt32();
+        if (len === 0) return "";
+        if (len < 0) {
+          const byteLen = (-len) * 2;
+          const raw = this.readBytes(byteLen);
+          const text = new TextDecoder("utf-16le").decode(raw.subarray(0, raw.length - 2));
+          return text;
+        }
+        const raw = this.readBytes(len);
+        return new TextDecoder("utf-8").decode(raw.subarray(0, raw.length - 1));
+      }
+      readFName() {
+        const name = this.readFString();
+        const num = this.readInt32();
+        return { name, num };
+      }
+    }
+
+    class ByteWriter {
+      constructor() {
+        this.chunks = [];
+        this.length = 0;
+      }
+      writeBytes(bytes) {
+        this.chunks.push(bytes);
+        this.length += bytes.length;
+      }
+      writeUint8(value) {
+        const b = new Uint8Array(1);
+        b[0] = value & 0xff;
+        this.writeBytes(b);
+      }
+      writeUint16(value) {
+        const b = new ArrayBuffer(2);
+        new DataView(b).setUint16(0, value, true);
+        this.writeBytes(new Uint8Array(b));
+      }
+      writeInt32(value) {
+        const b = new ArrayBuffer(4);
+        new DataView(b).setInt32(0, value, true);
+        this.writeBytes(new Uint8Array(b));
+      }
+      writeUint32(value) {
+        const b = new ArrayBuffer(4);
+        new DataView(b).setUint32(0, value, true);
+        this.writeBytes(new Uint8Array(b));
+      }
+      writeFString(str) {
+        if (!str) {
+          this.writeInt32(0);
+          return;
+        }
+        const raw = new TextEncoder().encode(str);
+        this.writeInt32(raw.length + 1);
+        this.writeBytes(raw);
+        this.writeUint8(0);
+      }
+      writeFName(nameObj) {
+        this.writeFString(nameObj.name || "");
+        this.writeInt32(nameObj.num || 0);
+      }
+      concat() {
+        const out = new Uint8Array(this.length);
+        let offset = 0;
+        for (const chunk of this.chunks) {
+          out.set(chunk, offset);
+          offset += chunk.length;
+        }
+        return out;
+      }
+    }
+
+    function readInt32At(bytes, offset) {
+      return new DataView(bytes.buffer, bytes.byteOffset + offset, 4).getInt32(0, true);
+    }
+
+    function looksLikeTagStart(bytes, offset, end) {
+      if (offset + 4 > end) return false;
+      const len = readInt32At(bytes, offset);
+      if (len <= 0 || len > 128) return false;
+      if (offset + 4 + len > end) return false;
+      if (bytes[offset + 4 + len - 1] !== 0) return false;
+      return true;
+    }
+
+    function isNoneAt(bytes, offset) {
+      if (offset + 8 > bytes.length) return false;
+      const len = readInt32At(bytes, offset);
+      if (len !== 4) return false;
+      return (
+        bytes[offset + 4] === 0x4e &&
+        bytes[offset + 5] === 0x6f &&
+        bytes[offset + 6] === 0x6e &&
+        bytes[offset + 7] === 0x65
+      );
+    }
+
+    function detectSizeAndVtag(bytes, offset, end, typeName) {
+      if (end - offset < 5) throw new Error("Not enough bytes for size/vtag");
+      const sizeA = readInt32At(bytes, offset);
+      const vtagA = bytes[offset + 4];
+      const valueStartA = offset + 5;
+      const okA = sizeA >= 0 &&
+        valueStartA + sizeA <= end &&
+        (valueStartA + sizeA === end || looksLikeTagStart(bytes, valueStartA + sizeA, end) || isNoneAt(bytes, valueStartA + sizeA));
+
+      const vtagB = bytes[offset];
+      const sizeB = readInt32At(bytes, offset + 1);
+      const valueStartB = offset + 5;
+      const okB = sizeB >= 0 &&
+        valueStartB + sizeB <= end &&
+        (valueStartB + sizeB === end || looksLikeTagStart(bytes, valueStartB + sizeB, end) || isNoneAt(bytes, valueStartB + sizeB));
+
+      const preferB = ["StructProperty","MapProperty","ArrayProperty","SetProperty","EnumProperty"].includes(typeName);
+
+      if (okA && !okB) return { size: sizeA, vtag: vtagA, sizeFirst: true, valueStart: valueStartA };
+      if (okB && !okA) return { size: sizeB, vtag: vtagB, sizeFirst: false, valueStart: valueStartB };
+      if (okA && okB) {
+        return preferB
+          ? { size: sizeB, vtag: vtagB, sizeFirst: false, valueStart: valueStartB }
+          : { size: sizeA, vtag: vtagA, sizeFirst: true, valueStart: valueStartA };
+      }
+      return preferB
+        ? { size: sizeB, vtag: vtagB, sizeFirst: false, valueStart: valueStartB }
+        : { size: sizeA, vtag: vtagA, sizeFirst: true, valueStart: valueStartA };
+    }
+
+    function readTypeDesc(reader, end) {
+      const base = reader.readFName();
+      const typeName = base.name;
+      const desc = { type: typeName, num: base.num };
+      if (typeName === "StructProperty") {
+        desc.struct_name = reader.readFName();
+        desc.struct_path = reader.readFName();
+      } else if (typeName === "EnumProperty") {
+        desc.enum_name = reader.readFName();
+        desc.enum_path = reader.readFName();
+        desc.underlying = readTypeDesc(reader, end);
+      } else if (typeName === "ArrayProperty") {
+        desc.inner = readTypeDesc(reader, end);
+      } else if (typeName === "SetProperty") {
+        desc.elem = readTypeDesc(reader, end);
+      } else if (typeName === "MapProperty") {
+        desc.key = readTypeDesc(reader, end);
+        desc.val = readTypeDesc(reader, end);
+      }
+      return desc;
+    }
+
+    function writeTypeDesc(writer, desc) {
+      writer.writeFName({ name: desc.type, num: desc.num });
+      if (desc.type === "StructProperty") {
+        writer.writeFName(desc.struct_name);
+        writer.writeFName(desc.struct_path);
+      } else if (desc.type === "EnumProperty") {
+        writer.writeFName(desc.enum_name);
+        writer.writeFName(desc.enum_path);
+        writeTypeDesc(writer, desc.underlying);
+      } else if (desc.type === "ArrayProperty") {
+        writeTypeDesc(writer, desc.inner);
+      } else if (desc.type === "SetProperty") {
+        writeTypeDesc(writer, desc.elem);
+      } else if (desc.type === "MapProperty") {
+        writeTypeDesc(writer, desc.key);
+        writeTypeDesc(writer, desc.val);
+      }
+    }
+
+    function readTag(bytes, offset, end) {
+      const reader = new ByteReader(bytes, offset, end - offset);
+      const name = reader.readFString();
+      if (name === "None") {
+        return { tag: null, nextOffset: offset + reader.tell() };
+      }
+      const typeDesc = readTypeDesc(reader, end);
+      const sizeInfo = detectSizeAndVtag(bytes, reader.abs(), end, typeDesc.type);
+      reader.seek(sizeInfo.valueStart - offset);
+      const valueStart = sizeInfo.valueStart;
+      const valueEnd = valueStart + sizeInfo.size;
+      const valueBytes = bytes.subarray(valueStart, valueEnd);
+      return {
+        tag: {
+          name,
+          typeDesc,
+          sizeFirst: sizeInfo.sizeFirst,
+          vtag: sizeInfo.vtag,
+          valueBytes
+        },
+        nextOffset: valueEnd
+      };
+    }
+
+    function parsePropertyList(bytes) {
+      const tags = [];
+      let offset = 0;
+      while (offset < bytes.length) {
+        const { tag, nextOffset } = readTag(bytes, offset, bytes.length);
+        if (!tag) break;
+        tags.push(tag);
+        offset = nextOffset;
+      }
+      return tags;
+    }
+
+    function buildPropertyList(tags) {
+      const writer = new ByteWriter();
+      for (const tag of tags) {
+        writer.writeFString(tag.name);
+        writeTypeDesc(writer, tag.typeDesc);
+        if (tag.sizeFirst) {
+          writer.writeInt32(tag.valueBytes.length);
+          writer.writeUint8(tag.vtag);
+        } else {
+          writer.writeUint8(tag.vtag);
+          writer.writeInt32(tag.valueBytes.length);
+        }
+        writer.writeBytes(tag.valueBytes);
+      }
+      writer.writeFString("None");
+      return writer.concat();
+    }
+
+    function parseGVAS(bytes) {
+      const reader = new ByteReader(bytes);
+      const magic = new TextDecoder("utf-8").decode(reader.readBytes(4));
+      if (magic !== "GVAS") throw new Error("Not a GVAS save");
+      reader.readInt32();
+      reader.readInt32();
+      reader.readInt32();
+      reader.readUint16();
+      reader.readUint16();
+      reader.readUint16();
+      reader.readUint32();
+      reader.readFString();
+      reader.readInt32();
+      const customCount = reader.readInt32();
+      for (let i = 0; i < customCount; i++) {
+        reader.readBytes(16);
+        reader.readInt32();
+      }
+      reader.readFString();
+      let headerEnd = reader.tell();
+      if (bytes[headerEnd] === 0x00) headerEnd += 1;
+      const headerBytes = bytes.subarray(0, headerEnd);
+
+      const rootTags = [];
+      let offset = headerEnd;
+      while (offset < bytes.length) {
+        const { tag, nextOffset } = readTag(bytes, offset, bytes.length);
+        if (!tag) break;
+        rootTags.push(tag);
+        offset = nextOffset;
+      }
+
+      const checkpointTag = rootTags.find((t) => t.name === "CheckpointName");
+      const checkpointName = checkpointTag ? new ByteReader(checkpointTag.valueBytes).readFString() : "";
+
+      const saveDataTag = rootTags.find((t) => t.name === "SaveData");
+      let saveData = null;
+      if (saveDataTag) {
+        const saveTags = parsePropertyList(saveDataTag.valueBytes);
+        const dictRawTag = saveTags.find((t) => t.name === "DictionaryRaw");
+        const dictTag = saveTags.find((t) => t.name === "Dictionary");
+        const spawnedTag = saveTags.find((t) => t.name === "SpawnedObjectDatas");
+
+        const dictionaryRaw = parseMapNameInt(dictRawTag?.valueBytes);
+        const dictionary = parseMapNameEnum(dictTag?.valueBytes);
+        const spawnInfo = parseMapHeader(spawnedTag?.valueBytes);
+
+        saveData = {
+          tags: saveTags,
+          dictionaryRaw,
+          dictionary,
+          spawnedTag,
+          spawnInfo
+        };
+      }
+
+      return { headerBytes, rootTags, checkpointName, saveData };
+    }
+
+    function parseMapHeader(bytes) {
+      if (!bytes) return { zero: 0, count: 0 };
+      const reader = new ByteReader(bytes);
+      const zero = reader.readInt32();
+      const count = reader.readInt32();
+      return { zero, count };
+    }
+
+    function parseMapNameInt(bytes) {
+      if (!bytes) return { zero: 0, count: 0, entries: [] };
+      const reader = new ByteReader(bytes);
+      const zero = reader.readInt32();
+      const count = reader.readInt32();
+      const entries = [];
+      for (let i = 0; i < count; i++) {
+        const key = reader.readFString();
+        const value = reader.readInt32();
+        entries.push({ key, value, original: value });
+      }
+      return { zero, count, entries };
+    }
+
+    function parseMapNameEnum(bytes) {
+      if (!bytes) return { zero: 0, count: 0, entries: [] };
+      const reader = new ByteReader(bytes);
+      const zero = reader.readInt32();
+      const count = reader.readInt32();
+      const entries = [];
+      for (let i = 0; i < count; i++) {
+        const key = reader.readFString();
+        const value = reader.readFString();
+        entries.push({ key, value, original: value });
+      }
+      return { zero, count, entries };
+    }
+
+    function buildMapNameInt(map) {
+      const writer = new ByteWriter();
+      writer.writeInt32(map.zero || 0);
+      writer.writeInt32(map.entries.length);
+      for (const entry of map.entries) {
+        writer.writeFString(entry.key);
+        writer.writeInt32(entry.value);
+      }
+      return writer.concat();
+    }
+
+    function buildMapNameEnum(map) {
+      const writer = new ByteWriter();
+      writer.writeInt32(map.zero || 0);
+      writer.writeInt32(map.entries.length);
+      for (const entry of map.entries) {
+        writer.writeFString(entry.key);
+        writer.writeFString(entry.value);
+      }
+      return writer.concat();
+    }
+
+    function rebuildSave(parsed, edits) {
+      const rootTags = parsed.rootTags.map((tag) => ({ ...tag }));
+      const checkpointTag = rootTags.find((t) => t.name === "CheckpointName");
+      if (checkpointTag && edits.checkpointName) {
+        const w = new ByteWriter();
+        w.writeFString(edits.checkpointName);
+        checkpointTag.valueBytes = w.concat();
+      }
+
+      const saveTag = rootTags.find((t) => t.name === "SaveData");
+      if (saveTag && parsed.saveData) {
+        const saveTags = parsed.saveData.tags.map((tag) => ({ ...tag }));
+        const rawTag = saveTags.find((t) => t.name === "DictionaryRaw");
+        if (rawTag) rawTag.valueBytes = buildMapNameInt(parsed.saveData.dictionaryRaw);
+        const dictTag = saveTags.find((t) => t.name === "Dictionary");
+        if (dictTag) dictTag.valueBytes = buildMapNameEnum(parsed.saveData.dictionary);
+        saveTag.valueBytes = buildPropertyList(saveTags);
+      }
+
+      const rootBytes = buildPropertyList(rootTags);
+      const out = new Uint8Array(parsed.headerBytes.length + rootBytes.length);
+      out.set(parsed.headerBytes, 0);
+      out.set(rootBytes, parsed.headerBytes.length);
+      return out;
+    }
+
+    function isDesktopShell() {
+      return typeof window.saveEditorDesktop !== "undefined";
+    }
+
+    async function fileToEntry(file) {
+      const buffer = await file.arrayBuffer();
+      return {
+        name: file.name,
+        path: file.webkitRelativePath || file.name,
+        bytes: new Uint8Array(buffer)
+      };
+    }
+
+    async function collectEntries(input) {
+      if (Array.isArray(input)) {
+        if (input.length && input[0]?.bytes) return input;
+        const entries = [];
+        for (const file of input) entries.push(await fileToEntry(file));
+        return entries;
+      }
+      if (input instanceof FileList) {
+        const entries = [];
+        for (const file of input) entries.push(await fileToEntry(file));
+        return entries;
+      }
+      return [];
+    }
+
+    function pickGVAS(entries) {
+      const candidates = entries.filter((e) => e.bytes && e.bytes.length >= 4 &&
+        e.bytes[0] === 0x47 && e.bytes[1] === 0x56 && e.bytes[2] === 0x41 && e.bytes[3] === 0x53);
+      if (!candidates.length) return null;
+      return candidates.sort((a, b) => b.bytes.length - a.bytes.length)[0];
+    }
+
+    async function handleEntries(entries) {
+      const picked = pickGVAS(entries);
+      if (!picked) {
+        setStatus("No GVAS file found. Choose the biggest file inside the wgs folder.", true);
+        return;
+      }
+      state.source = picked;
+      state.parsed = null;
+      state.dirty = false;
+      const fullPath = picked.path || picked.name;
+      dom.fileName.textContent = formatPath(fullPath);
+      dom.fileName.title = fullPath;
+      dom.decodeStatus.textContent = "Parsing save…";
+      try {
+        state.parsed = parseGVAS(picked.bytes);
+        setStatus("Ready. Parsed GVAS successfully.");
+        hydrateUI();
+      } catch (err) {
+        setStatus(`Parse failed: ${err.message}`, true);
+      }
+    }
+
+    function setStatus(message, isError = false) {
+      dom.decodeStatus.textContent = message;
+      dom.decodeStatus.style.color = isError ? "var(--bad)" : "var(--text-dim)";
+    }
+
+    function markDirty(flag) {
+      state.dirty = flag;
+      dom.dirtyFlag.textContent = flag ? "Unsaved changes." : "No changes yet.";
+      dom.resetBtn.disabled = !flag;
+      dom.saveBtn.disabled = !state.parsed;
+      dom.downloadBackupBtn.disabled = !state.parsed;
+      dom.downloadEditedBtn.disabled = !state.parsed;
+    }
+
+      function hydrateUI() {
+        const parsed = state.parsed;
+        if (!parsed || !parsed.saveData) return;
+        const dictRaw = parsed.saveData.dictionaryRaw;
+        const dict = parsed.saveData.dictionary;
+
+      const pesosEntry = dictRaw.entries.find((e) => e.key === "Inventory.Descriptor.Item.Pesos");
+      const pesosValue = pesosEntry ? pesosEntry.value : 0;
+      dom.pesosInput.disabled = false;
+      dom.pesosInput.value = pesosValue;
+      dom.pesosCurrent.textContent = pesosValue.toString();
+      dom.pesosNew.textContent = pesosValue.toString();
+
+      dom.checkpointSelect.disabled = false;
+      dom.checkpointSelect.innerHTML = "";
+      const checkpoints = dict.entries.map((e) => e.key).filter((k) => k.startsWith("Checkpoint."));
+      checkpoints.sort();
+      for (const key of checkpoints) {
+        const opt = document.createElement("option");
+        opt.value = key;
+        opt.textContent = key;
+        dom.checkpointSelect.appendChild(opt);
+      }
+      dom.checkpointCurrent.textContent = parsed.checkpointName || "-";
+      dom.checkpointSelect.value = parsed.checkpointName || checkpoints[0] || "";
+      dom.checkpointNew.textContent = dom.checkpointSelect.value || "-";
+
+      dom.spawnSize.textContent = parsed.saveData.spawnedTag ? parsed.saveData.spawnedTag.valueBytes.length : "-";
+        dom.spawnCount.textContent = parsed.saveData.spawnInfo?.count ?? "-";
+
+        dom.showZerosToggle.checked = state.showZeros;
+        dom.showAllStatesToggle.checked = state.showAllStates;
+        if (dom.showInternalToggle) {
+          dom.showInternalToggle.checked = state.showInternal;
+          dom.internalWarning.style.display = state.showInternal ? "inline" : "none";
+        }
+
+        updateMissionGroupSelect(dictRaw.entries.filter((e) => isProgressKey(e.key)));
+        if (dom.missionSearch) dom.missionSearch.value = "";
+
+        renderInventory();
+        renderMission();
+        renderStats();
+        renderWeapons();
+        renderDictionary();
+        renderRawTable();
+        renderHighlights();
+        renderAnalysis();
+        markDirty(false);
+      }
+
+      function renderInventory() {
+        const entries = state.parsed.saveData.dictionaryRaw.entries.filter((e) => isInventoryKey(e.key));
+        renderEntryTable(dom.inventoryTable, entries, {
+          showZeros: true,
+          labelFn: formatLabel,
+          emptyText: "No inventory keys found yet. Make a mid-game save and reload."
+        });
+      }
+
+      function renderMission() {
+        const query = dom.missionSearch?.value?.trim().toLowerCase() || "";
+        const group = dom.missionGroupSelect?.value || "All";
+        let entries = state.parsed.saveData.dictionaryRaw.entries.filter((e) => isProgressKey(e.key));
+        if (group && group !== "All") {
+          entries = entries.filter((e) => getMissionGroup(e.key) === group);
+        }
+        if (query) {
+          entries = entries.filter((e) => e.key.toLowerCase().includes(query));
+        }
+        renderEntryTable(dom.missionTable, entries, {
+          emptyText: "No mission keys matched this filter.",
+          limit: 250
+        });
+      }
+
+      function renderStats() {
+        const entries = state.parsed.saveData.dictionaryRaw.entries.filter((e) => isStatsKey(e.key));
+        renderEntryTable(dom.statsTable, entries, {
+          showZeros: true,
+          labelFn: formatLabel,
+          emptyText: "No player/stat keys found yet. They often appear later in the game."
+        });
+      }
+
+      function renderWeapons() {
+        const entries = state.parsed.saveData.dictionaryRaw.entries.filter((e) => isWeaponsKey(e.key));
+        renderEntryTable(dom.weaponsTable, entries, {
+          showZeros: true,
+          labelFn: formatLabel,
+          emptyText: "No weapon/upgrade keys found yet."
+        });
+      }
+
+    function renderDictionary() {
+      const entries = state.parsed.saveData.dictionary.entries.filter((e) =>
+        state.showAllStates ? true : e.value !== "EState::Inactive"
+      );
+      dom.dictionaryTable.innerHTML = "";
+      const options = Array.from(new Set(entries.map((e) => e.value)));
+      if (!options.includes("EState::Active")) options.unshift("EState::Active");
+      if (!options.includes("EState::Inactive")) options.unshift("EState::Inactive");
+      for (const entry of entries) {
+        const row = document.createElement("div");
+        row.className = "row";
+        const key = document.createElement("div");
+        key.className = "key";
+        key.textContent = entry.key;
+        const current = document.createElement("div");
+        current.className = "val";
+        current.textContent = entry.original;
+        const select = document.createElement("select");
+        for (const opt of options) {
+          const o = document.createElement("option");
+          o.value = opt;
+          o.textContent = opt;
+          select.appendChild(o);
+        }
+        select.value = entry.value;
+        select.addEventListener("change", () => {
+          entry.value = select.value;
+          markDirty(true);
+        });
+        row.appendChild(key);
+        row.appendChild(current);
+        row.appendChild(select);
+        dom.dictionaryTable.appendChild(row);
+      }
+    }
+
+    function renderRawTable() {
+      const query = dom.rawSearch.value?.toLowerCase() || "";
+      let entries = state.parsed.saveData.dictionaryRaw.entries.filter((e) =>
+        e.key.toLowerCase().includes(query)
+      );
+      if (!state.showInternal) {
+        entries = entries.filter((e) => !isGuidKey(e.key));
+      }
+      renderEntryTable(dom.rawTable, entries, {
+        emptyText: state.showInternal
+          ? "No matching keys."
+          : "No matching keys (internal IDs are hidden by default)."
+      });
+    }
+
+    function renderEntryTable(container, entries, opts = {}) {
+      if (!container) return;
+      container.innerHTML = "";
+      const showZeros = opts.showZeros ?? state.showZeros;
+      let rows = showZeros ? entries : entries.filter((e) => e.value !== 0);
+      if (opts.filter) rows = rows.filter(opts.filter);
+      const total = rows.length;
+      if (opts.limit && rows.length > opts.limit) {
+        const note = document.createElement("div");
+        note.className = "muted small";
+        note.textContent = `Showing first ${opts.limit} of ${total} entries.`;
+        container.appendChild(note);
+        rows = rows.slice(0, opts.limit);
+      }
+      if (!rows.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted small";
+        empty.textContent = opts.emptyText || (showZeros
+          ? "No entries to show."
+          : "No entries to show. Toggle \"Show zero values\" to view everything.");
+        container.appendChild(empty);
+        return;
+      }
+      for (const entry of rows) {
+        const row = document.createElement("div");
+        row.className = "row";
+        const key = document.createElement("div");
+        key.className = "key";
+        key.textContent = opts.labelFn ? opts.labelFn(entry.key) : formatKey(entry.key);
+        key.title = entry.key;
+        const current = document.createElement("div");
+        current.className = "val";
+        current.textContent = entry.original;
+        const input = document.createElement("input");
+        input.type = "number";
+        input.value = entry.value;
+        input.addEventListener("change", () => {
+          const next = Number(input.value);
+          entry.value = Number.isFinite(next) ? next : entry.value;
+          if (entry.value !== entry.original) current.classList.add("changed");
+          else current.classList.remove("changed");
+          markDirty(true);
+        });
+        row.appendChild(key);
+        row.appendChild(current);
+        row.appendChild(input);
+        container.appendChild(row);
+      }
+    }
+
+    function renderHighlights() {
+      if (!state.parsed) return;
+      const active = state.parsed.saveData.dictionary.entries.filter((e) => e.value !== "EState::Inactive");
+      dom.activeCheckpointList.innerHTML = "";
+      if (!active.length) {
+        dom.activeCheckpointList.textContent = "None";
+      } else {
+        for (const entry of active) {
+          const item = document.createElement("div");
+          item.className = "row";
+          const key = document.createElement("div");
+          key.className = "key";
+          key.textContent = formatKey(entry.key);
+          key.title = entry.key;
+          const value = document.createElement("div");
+          value.className = "val";
+          value.textContent = entry.value;
+          item.appendChild(key);
+          item.appendChild(value);
+          dom.activeCheckpointList.appendChild(item);
+        }
+      }
+
+      const nonZero = state.parsed.saveData.dictionaryRaw.entries.filter((e) =>
+        e.value !== 0 && e.key !== "Inventory.Descriptor.Item.Pesos"
+      );
+      dom.nonZeroList.innerHTML = "";
+      if (!nonZero.length) {
+        const pesos = state.parsed.saveData.dictionaryRaw.entries.find((e) => e.key === "Inventory.Descriptor.Item.Pesos");
+        dom.nonZeroList.textContent = pesos && pesos.value !== 0
+          ? "Only currency is non-zero in this save."
+          : "None";
+      } else {
+        for (const entry of nonZero.slice(0, 20)) {
+          const item = document.createElement("div");
+          item.className = "row";
+          const key = document.createElement("div");
+          key.className = "key";
+          key.textContent = formatKey(entry.key);
+          key.title = entry.key;
+          const value = document.createElement("div");
+          value.className = "val";
+          value.textContent = entry.value;
+          item.appendChild(key);
+          item.appendChild(value);
+          dom.nonZeroList.appendChild(item);
+        }
+      }
+    }
+
+    function renderAnalysis() {
+      if (!state.parsed) return;
+      const rawEntries = state.parsed.saveData.dictionaryRaw.entries;
+      const nonZero = rawEntries.filter((e) => e.value !== 0);
+      const inventory = rawEntries.filter((e) => isInventoryKey(e.key));
+      const stats = rawEntries.filter((e) => isStatsKey(e.key));
+      const weapons = rawEntries.filter((e) => isWeaponsKey(e.key));
+      const missions = rawEntries.filter((e) => isProgressKey(e.key));
+
+      dom.analysisRawCount.textContent = `${rawEntries.length}`;
+      dom.analysisNonZero.textContent = `${nonZero.length}`;
+      dom.analysisInventory.textContent = `${inventory.length}`;
+      dom.analysisStats.textContent = `${stats.length}`;
+      dom.analysisWeapons.textContent = `${weapons.length}`;
+      dom.analysisMissions.textContent = `${missions.length}`;
+
+      const notes = [];
+      if (inventory.length <= 1) {
+        notes.push("This save only has the currency entry. Inventory items usually appear after more progress.");
+      }
+      if (!stats.length) {
+        notes.push("No player/stat keys detected yet.");
+      }
+      if (!weapons.length) {
+        notes.push("No weapon or upgrade keys detected yet.");
+      }
+      dom.analysisNote.textContent = notes.join(" ");
+    }
+
+    function formatKey(key) {
+      const parts = key.split(".");
+      if (parts.length <= 2) return key;
+      const tail = parts.slice(-2).join(" / ");
+      const head = parts[0];
+      return `${head} · ${tail}`;
+    }
+
+    function formatPath(p) {
+      if (!p) return "-";
+      const parts = p.split(/[\\/]/).filter(Boolean);
+      if (parts.length <= 3) return p;
+      return `...\\${parts.slice(-3).join("\\")}`;
+    }
+
+    function tokenizeKey(key) {
+      return key
+        .split(/[._]/)
+        .flatMap((part) => part
+          .replace(/([a-z])([A-Z])/g, "$1 $2")
+          .split(/[^A-Za-z0-9]+/)
+        )
+        .filter(Boolean)
+        .map((token) => token.toLowerCase());
+    }
+
+    function hasAnyToken(key, tokens) {
+      const parts = tokenizeKey(key);
+      return tokens.some((token) => parts.includes(token));
+    }
+
+    function isGuidKey(key) {
+      return /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/.test(key) ||
+        /[0-9a-fA-F]{32}/.test(key);
+    }
+
+    function isProgressKey(key) {
+      return key.startsWith("Mission.") || key.startsWith("Checkpoint.") || key.includes("Objective") || key.includes(".OBJ.");
+    }
+
+    function isInventoryKey(key) {
+      if (isGuidKey(key) || isProgressKey(key)) return false;
+      return hasAnyToken(key, ["inventory", "item", "items", "ammo", "consumable", "currency", "peso", "pesos"]);
+    }
+
+    function isStatsKey(key) {
+      if (isGuidKey(key) || isProgressKey(key)) return false;
+      return hasAnyToken(key, ["stat", "stats", "player", "xp", "level", "health", "armor", "shield", "stamina", "speed"]);
+    }
+
+    function isWeaponsKey(key) {
+      if (isGuidKey(key) || isProgressKey(key)) return false;
+      return hasAnyToken(key, ["weapon", "gun", "upgrade", "mod", "perk", "rifle", "pistol"]);
+    }
+
+    function formatLabel(key) {
+      const parts = key.split(".");
+      const last = parts[parts.length - 1] || key;
+      return last.replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2");
+    }
+
+    function getMissionGroup(key) {
+      if (key.startsWith("Checkpoint.")) {
+        return key.split(".").slice(0, 2).join(".");
+      }
+      if (!key.startsWith("Mission.")) return "Other";
+      const parts = key.split(".");
+      return parts.slice(0, Math.min(3, parts.length)).join(".");
+    }
+
+    function updateMissionGroupSelect(entries) {
+      if (!dom.missionGroupSelect) return;
+      const groups = new Set(["All"]);
+      for (const entry of entries) {
+        groups.add(getMissionGroup(entry.key));
+      }
+      const list = Array.from(groups).sort();
+      const current = dom.missionGroupSelect.value || "All";
+      dom.missionGroupSelect.innerHTML = "";
+      for (const group of list) {
+        const opt = document.createElement("option");
+        opt.value = group;
+        opt.textContent = group;
+        dom.missionGroupSelect.appendChild(opt);
+      }
+      dom.missionGroupSelect.value = list.includes(current) ? current : "All";
+    }
+
+    dom.pesosInput.addEventListener("input", () => {
+      if (!state.parsed) return;
+      const value = Math.max(0, Number(dom.pesosInput.value || 0));
+      const entry = state.parsed.saveData.dictionaryRaw.entries.find((e) => e.key === "Inventory.Descriptor.Item.Pesos");
+      if (entry) {
+        entry.value = value;
+        dom.pesosNew.textContent = value.toString();
+        markDirty(true);
+      }
+    });
+
+    dom.checkpointSelect.addEventListener("change", () => {
+      if (!state.parsed) return;
+      dom.checkpointNew.textContent = dom.checkpointSelect.value;
+      markDirty(true);
+    });
+
+    dom.rawSearch.addEventListener("input", () => {
+      if (!state.parsed) return;
+      renderRawTable();
+    });
+
+    dom.missionSearch?.addEventListener("input", () => {
+      if (!state.parsed) return;
+      renderMission();
+    });
+
+    dom.missionGroupSelect?.addEventListener("change", () => {
+      if (!state.parsed) return;
+      renderMission();
+    });
+
+    dom.showZerosToggle.addEventListener("change", () => {
+      state.showZeros = dom.showZerosToggle.checked;
+      if (!state.parsed) return;
+      renderInventory();
+      renderMission();
+      renderStats();
+      renderWeapons();
+      renderRawTable();
+      renderAnalysis();
+    });
+
+    dom.showAllStatesToggle.addEventListener("change", () => {
+      state.showAllStates = dom.showAllStatesToggle.checked;
+      if (!state.parsed) return;
+      renderDictionary();
+      renderHighlights();
+    });
+
+    dom.showInternalToggle?.addEventListener("change", () => {
+      state.showInternal = dom.showInternalToggle.checked;
+      dom.internalWarning.style.display = state.showInternal ? "inline" : "none";
+      if (!state.parsed) return;
+      renderRawTable();
+    });
+
+      dom.rawAddBtn.addEventListener("click", () => {
+        if (!state.parsed) return;
+        const key = dom.rawKeyInput.value.trim();
+        if (!key) return;
+        const value = Number(dom.rawValueInput.value || 0);
+      const list = state.parsed.saveData.dictionaryRaw.entries;
+      let entry = list.find((e) => e.key === key);
+      if (!entry) {
+        entry = { key, value, original: 0 };
+        list.push(entry);
+      } else {
+        entry.value = Number.isFinite(value) ? value : entry.value;
+      }
+        markDirty(true);
+        renderInventory();
+        renderMission();
+        renderStats();
+        renderWeapons();
+        renderRawTable();
+        renderHighlights();
+        renderAnalysis();
+      });
+
+    dom.resetBtn.addEventListener("click", () => {
+      if (!state.source) return;
+      state.parsed = parseGVAS(state.source.bytes);
+      hydrateUI();
+    });
+
+    dom.saveBtn.addEventListener("click", async () => {
+      if (!state.parsed || !state.source) return;
+      const edits = {
+        checkpointName: dom.checkpointSelect.value
+      };
+      const output = rebuildSave(state.parsed, edits);
+      if (isDesktopShell() && state.source.path) {
+        await window.saveEditorDesktop.saveWithBackupAndOverwrite({
+          sourcePath: state.source.path,
+          sourceName: state.source.name,
+          bytes: Array.from(output)
+        });
+        setStatus("Saved with backup next to original.");
+        markDirty(false);
+      } else {
+        const backupBlob = new Blob([state.source.bytes], { type: "application/octet-stream" });
+        const backupName = state.source.name.replace(/\.[^/.]+$/, "") + ".bak";
+        downloadBlob(backupBlob, backupName);
+        const editedBlob = new Blob([output], { type: "application/octet-stream" });
+        const editedName = state.source.name.replace(/\.[^/.]+$/, "") + "_modified.sav";
+        downloadBlob(editedBlob, editedName);
+        setStatus("Web mode: backup + edited save downloaded.");
+        markDirty(false);
+      }
+    });
+
+    dom.downloadBackupBtn.addEventListener("click", () => {
+      if (!state.source) return;
+      const blob = new Blob([state.source.bytes], { type: "application/octet-stream" });
+      const name = state.source.name.replace(/\.[^/.]+$/, "") + ".bak";
+      downloadBlob(blob, name);
+    });
+
+    dom.downloadEditedBtn.addEventListener("click", () => {
+      if (!state.parsed || !state.source) return;
+      const edits = { checkpointName: dom.checkpointSelect.value };
+      const output = rebuildSave(state.parsed, edits);
+      const blob = new Blob([output], { type: "application/octet-stream" });
+      const name = state.source.name.replace(/\.[^/.]+$/, "") + "_modified.sav";
+      downloadBlob(blob, name);
+      markDirty(false);
+    });
+
+    function downloadBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    dom.pickFileBtn.addEventListener("click", async () => {
+      if (isDesktopShell()) {
+        const picked = await window.saveEditorDesktop.pickFiles();
+        await handleEntries(picked);
+      } else {
+        dom.fileInput.value = "";
+        dom.fileInput.click();
+      }
+    });
+
+    dom.pickFolderBtn.addEventListener("click", async () => {
+      if (isDesktopShell()) {
+        const picked = await window.saveEditorDesktop.pickFolder();
+        await handleEntries(picked);
+      } else {
+        dom.folderInput.value = "";
+        dom.folderInput.click();
+      }
+    });
+
+    dom.fileInput.addEventListener("change", async (event) => {
+      await handleEntries(await collectEntries(event.target.files));
+    });
+
+    dom.folderInput.addEventListener("change", async (event) => {
+      await handleEntries(await collectEntries(event.target.files));
+    });
+
+    ["dragenter", "dragover"].forEach((evt) => {
+      dom.dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dom.dropZone.classList.add("dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach((evt) => {
+      dom.dropZone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dom.dropZone.classList.remove("dragover");
+      });
+    });
+    dom.dropZone.addEventListener("drop", async (e) => {
+      const items = e.dataTransfer?.items;
+      if (items && items.length && items[0].webkitGetAsEntry) {
+        const files = [];
+        async function walk(entry) {
+          if (entry.isFile) {
+            await new Promise((resolve) => entry.file((file) => { files.push(file); resolve(); }));
+          } else if (entry.isDirectory) {
+            const reader = entry.createReader();
+            const children = await new Promise((resolve) => reader.readEntries(resolve));
+            for (const child of children) await walk(child);
+          }
+        }
+        for (const item of items) {
+          const entry = item.webkitGetAsEntry();
+          if (entry) await walk(entry);
+        }
+        await handleEntries(await collectEntries(files));
+      } else {
+        await handleEntries(await collectEntries(e.dataTransfer.files));
+      }
+    });
+  </script>
+</body>
+</html>
