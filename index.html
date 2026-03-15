@@ -1268,6 +1268,12 @@
       return `...\\${parts.slice(-3).join("\\")}`;
     }
 
+    function splitBaseExt(name) {
+      const idx = name.lastIndexOf(".");
+      if (idx <= 0) return { base: name, ext: "" };
+      return { base: name.slice(0, idx), ext: name.slice(idx) };
+    }
+
     function tokenizeKey(key) {
       return key
         .split(/[._]/)
@@ -1441,22 +1447,26 @@
         });
         setStatus("Saved with backup next to original.");
         markDirty(false);
-      } else {
-        const backupBlob = new Blob([state.source.bytes], { type: "application/octet-stream" });
-        const backupName = state.source.name.replace(/\.[^/.]+$/, "") + ".bak";
-        downloadBlob(backupBlob, backupName);
-        const editedBlob = new Blob([output], { type: "application/octet-stream" });
-        const editedName = state.source.name.replace(/\.[^/.]+$/, "") + "_modified.sav";
-        downloadBlob(editedBlob, editedName);
-        setStatus("Web mode: backup + edited save downloaded.");
-        markDirty(false);
-      }
+        } else {
+          const backupBlob = new Blob([state.source.bytes], { type: "application/octet-stream" });
+          const backupParts = splitBaseExt(state.source.name);
+          const backupName = `${backupParts.base}.bak`;
+          downloadBlob(backupBlob, backupName);
+          const editedBlob = new Blob([output], { type: "application/octet-stream" });
+          const editedName = backupParts.ext
+            ? `${backupParts.base}_modified${backupParts.ext}`
+            : `${backupParts.base}_modified`;
+          downloadBlob(editedBlob, editedName);
+          setStatus("Web mode: backup + edited save downloaded.");
+          markDirty(false);
+        }
     });
 
     dom.downloadBackupBtn.addEventListener("click", () => {
       if (!state.source) return;
       const blob = new Blob([state.source.bytes], { type: "application/octet-stream" });
-      const name = state.source.name.replace(/\.[^/.]+$/, "") + ".bak";
+      const parts = splitBaseExt(state.source.name);
+      const name = `${parts.base}.bak`;
       downloadBlob(blob, name);
     });
 
@@ -1465,7 +1475,10 @@
       const edits = { checkpointName: dom.checkpointSelect.value };
       const output = rebuildSave(state.parsed, edits);
       const blob = new Blob([output], { type: "application/octet-stream" });
-      const name = state.source.name.replace(/\.[^/.]+$/, "") + "_modified.sav";
+      const parts = splitBaseExt(state.source.name);
+      const name = parts.ext
+        ? `${parts.base}_modified${parts.ext}`
+        : `${parts.base}_modified`;
       downloadBlob(blob, name);
       markDirty(false);
     });
