@@ -61,6 +61,24 @@
       text-transform:uppercase;
     }
     header .subtitle{color:var(--text-dim);font-size:.9rem}
+    .kofi-widget{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      z-index:60;
+      padding:10px 14px;
+      border-radius:999px;
+      border:1px solid rgba(255,193,88,.6);
+      background:linear-gradient(180deg,#ffe7ad,#ffd675);
+      color:#2b210b;
+      text-decoration:none;
+      font-weight:700;
+      box-shadow:0 14px 26px rgba(0,0,0,.35);
+      transform:translateZ(0);
+      transition:transform .18s ease, filter .18s ease;
+    }
+    .kofi-widget:hover{transform:translateY(-1px);filter:saturate(1.05)}
+    @media (max-width:740px){.kofi-widget{right:12px;bottom:12px;font-size:.9rem;padding:9px 12px}}
     nav{display:flex;gap:12px;flex-wrap:wrap}
     nav a{
       padding:8px 14px;
@@ -217,7 +235,7 @@
   <header>
     <div class="title">
       <h1>High On Life 2 - Save Editor</h1>
-      <div class="subtitle">Simple by default. Advanced if you need it.</div>
+      <div class="subtitle">Close the game and cloud sync before editing. Re-open after saving.</div>
     </div>
     <nav>
       <a href="https://saveeditors.github.io/" target="_blank" rel="noreferrer">All Editors Home</a>
@@ -429,16 +447,9 @@
       </div>
     </details>
 
-    <footer>
-      Close the game and cloud sync before editing. Re-open after saving.
-      <div class="muted small" style="margin-top:6px">
-        <a href="https://saveeditors.github.io/" target="_blank" rel="noreferrer">All Editors Home</a> |
-        <a href="https://github.com/SaveEditors/high-on-life-2-save-editor" target="_blank" rel="noreferrer">Repo</a> |
-        <a href="https://github.com/SaveEditors/high-on-life-2-save-editor/issues" target="_blank" rel="noreferrer">Issues</a> |
-        <a href="https://github.com/SaveEditors" target="_blank" rel="noreferrer">SaveEditors Org</a>
-      </div>
-    </footer>
   </main>
+
+  <a class="kofi-widget" href="https://ko-fi.com/saveeditors" target="_blank" rel="noopener noreferrer" aria-label="Support on Ko-fi">Ko-fi</a>
 
   <script>
       const dom = {
